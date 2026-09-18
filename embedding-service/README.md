@@ -115,8 +115,10 @@ Set `EMBEDDING_API_TOKEN` in your `.env` file to this token.
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
 | `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | HuggingFace model identifier |
+| `EMBEDDING_MODEL_REVISION` | `614241f622f53c4eeff9890bdc4f31cfecc418b3` | Pinned HuggingFace model commit revision hash for reproducibility |
 | `EMBEDDING_API_TOKEN` | *(None / Required)* | Secret Bearer token required for `/v1/embeddings*` |
 | `MAX_BATCH_SIZE` | `64` | Maximum allowable text items in a single batch request |
+| `MAX_CONCURRENT_INFERENCE` | `1` | Maximum concurrent inference operations (CPU default: 1) |
 | `PORT` | `8000` | Port for the Uvicorn web server |
 | `HOST` | `0.0.0.0` | Host interface to bind |
 | `LOG_LEVEL` | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |

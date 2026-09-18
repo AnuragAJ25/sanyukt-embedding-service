@@ -2,6 +2,8 @@ from starlette.testclient import TestClient
 from app.config import settings
 from app.model import engine
 
+EXPECTED_REVISION = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
+
 
 def test_health_endpoint_public_and_healthy(client: TestClient):
     """Verify GET /health is publicly accessible without auth and reports ready when token and model are valid."""
@@ -12,6 +14,7 @@ def test_health_endpoint_public_and_healthy(client: TestClient):
     assert data["model"] == "intfloat/multilingual-e5-small"
     assert data["dimensions"] == 384
     assert data["ready"] is True
+    assert data["revision"] == EXPECTED_REVISION
     assert "device" in data
 
 

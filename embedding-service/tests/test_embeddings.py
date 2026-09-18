@@ -3,6 +3,8 @@ import pytest
 from starlette.testclient import TestClient
 from app.config import settings
 
+EXPECTED_REVISION = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
+
 
 def is_unit_normalized(vec: list[float], tolerance: float = 1e-3) -> bool:
     """Check if vector L2 norm is approximately 1.0."""
@@ -21,6 +23,7 @@ def test_single_query_embedding_success(client: TestClient, auth_headers: dict):
     data = response.json()
 
     assert data["model"] == settings.EMBEDDING_MODEL
+    assert data["revision"] == EXPECTED_REVISION
     assert data["dimensions"] == 384
     assert isinstance(data["embedding"], list)
     assert len(data["embedding"]) == 384
@@ -39,6 +42,7 @@ def test_single_passage_embedding_success(client: TestClient, auth_headers: dict
     data = response.json()
 
     assert data["model"] == settings.EMBEDDING_MODEL
+    assert data["revision"] == EXPECTED_REVISION
     assert data["dimensions"] == 384
     assert len(data["embedding"]) == 384
     assert is_unit_normalized(data["embedding"])
@@ -60,6 +64,7 @@ def test_batch_embedding_success(client: TestClient, auth_headers: dict):
     data = response.json()
 
     assert data["model"] == settings.EMBEDDING_MODEL
+    assert data["revision"] == EXPECTED_REVISION
     assert data["dimensions"] == 384
     assert data["count"] == 3
     assert len(data["embeddings"]) == 3
