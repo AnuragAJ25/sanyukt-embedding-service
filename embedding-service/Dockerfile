@@ -7,6 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     HF_HOME=/app/cache/huggingface \
     TRANSFORMERS_CACHE=/app/cache/huggingface \
+    EMBEDDING_MODEL_REVISION=614241f622f53c4eeff9890bdc4f31cfecc418b3 \
     PORT=8000 \
     HOST=0.0.0.0
 
@@ -17,16 +18,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+# Install exact frozen dependencies from requirements.lock
+COPY requirements.lock /app/
+RUN pip install --no-cache-dir -r requirements.lock
 
-# Pre-download and cache model during container build (Strategy A)
-# Ensures zero cold-start delay and no runtime internet dependency for weights
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-small')"
+# Pre-download and bake pinned model revision into container image during build (Strategy A)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-small', revision='614241f622f53c4eeff9890bdc4f31cfecc418b3')"
 
 # Copy application source code
 COPY app /app/app
+
+# Enforce strict offline operation at runtime: zero outbound internet calls to HuggingFace
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
 
 # Create non-root system user for security
 RUN useradd -u 1000 -m -s /bin/bash appuser && \

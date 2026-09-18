@@ -11,6 +11,7 @@ services:
     environment:
       - EMBEDDING_API_TOKEN=${EMBEDDING_API_TOKEN}
       - EMBEDDING_MODEL=intfloat/multilingual-e5-small
+      - EMBEDDING_MODEL_REVISION=614241f622f53c4eeff9890bdc4f31cfecc418b3
       - MAX_BATCH_SIZE=64
       - MAX_CONCURRENT_INFERENCE=1
       - PORT=8000

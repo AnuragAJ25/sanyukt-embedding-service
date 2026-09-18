@@ -3,7 +3,6 @@ import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
 
 from app.config import settings
 from app.model import engine
@@ -84,34 +83,6 @@ if settings.ALLOWED_ORIGINS:
 # Register route controllers
 app.include_router(health_router)
 app.include_router(embeddings_router)
-
-
-def custom_openapi():
-    """Enhance OpenAPI schema with BearerAuth security definitions."""
-    if app.openapi_schema:
-        return app.openapi_schema
-
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-
-    openapi_schema["components"] = openapi_schema.get("components", {})
-    openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "description": "Provide secret API token in 'Authorization: Bearer <EMBEDDING_API_TOKEN>' header.",
-        }
-    }
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi
 
 
 if __name__ == "__main__":

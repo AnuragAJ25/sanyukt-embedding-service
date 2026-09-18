@@ -40,6 +40,11 @@ class SingleEmbeddingResponse(BaseModel):
         description="Name of the model used to produce the embedding.",
         examples=["intfloat/multilingual-e5-small"],
     )
+    revision: Optional[str] = Field(
+        default=None,
+        description="Pinned model commit revision hash.",
+        examples=["614241f622f53c4eeff9890bdc4f31cfecc418b3"],
+    )
     dimensions: int = Field(
         ...,
         description="Dimension size of the embedding vector.",
@@ -94,6 +99,11 @@ class BatchEmbeddingResponse(BaseModel):
         description="Name of the model used to produce the embeddings.",
         examples=["intfloat/multilingual-e5-small"],
     )
+    revision: Optional[str] = Field(
+        default=None,
+        description="Pinned model commit revision hash.",
+        examples=["614241f622f53c4eeff9890bdc4f31cfecc418b3"],
+    )
     dimensions: int = Field(
         ...,
         description="Dimension size of each embedding vector.",
@@ -114,6 +124,11 @@ class HealthResponse(BaseModel):
     """Service health and model readiness status."""
     status: str = Field(default="ok", examples=["ok"])
     model: str = Field(default="intfloat/multilingual-e5-small", examples=["intfloat/multilingual-e5-small"])
+    revision: Optional[str] = Field(
+        default=None,
+        description="Pinned model commit revision hash.",
+        examples=["614241f622f53c4eeff9890bdc4f31cfecc418b3"],
+    )
     dimensions: int = Field(default=384, examples=[384])
     ready: bool = Field(default=True, examples=[True])
     device: str = Field(default="cpu", examples=["cpu"])

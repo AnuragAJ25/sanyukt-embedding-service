@@ -90,6 +90,7 @@ async def create_single_embedding(
 
     return SingleEmbeddingResponse(
         model=engine.model_name,
+        revision=engine.model_revision,
         dimensions=len(embedding),
         embedding=embedding,
     )
@@ -172,6 +173,7 @@ async def create_batch_embeddings(
 
     return BatchEmbeddingResponse(
         model=engine.model_name,
+        revision=engine.model_revision,
         dimensions=engine.dimensions,
         count=len(embeddings),
         embeddings=embeddings,

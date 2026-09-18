@@ -18,6 +18,10 @@ class Settings(BaseSettings):
         default="intfloat/multilingual-e5-small",
         description="HuggingFace model identifier for sentence-transformers",
     )
+    EMBEDDING_MODEL_REVISION: str = Field(
+        default="614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        description="Pinned HuggingFace model commit revision hash",
+    )
     EMBEDDING_API_TOKEN: str = Field(
         default="",
         description="Secret Bearer token required to access embedding endpoints",

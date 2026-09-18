@@ -12,6 +12,7 @@ from app.config import settings
 logger = logging.getLogger("embedding-service.access")
 
 security_scheme = HTTPBearer(
+    scheme_name="BearerAuth",
     auto_error=False,
     description="Bearer token authentication for embedding endpoints",
 )

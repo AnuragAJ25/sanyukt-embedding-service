@@ -36,6 +36,7 @@ async def get_health():
             content={
                 "status": f"degraded ({reason})",
                 "model": engine.model_name,
+                "revision": engine.model_revision,
                 "dimensions": engine.dimensions,
                 "ready": False,
                 "device": engine.device,
@@ -45,6 +46,7 @@ async def get_health():
     return HealthResponse(
         status="ok",
         model=engine.model_name,
+        revision=engine.model_revision,
         dimensions=engine.dimensions,
         ready=True,
         device=engine.device,

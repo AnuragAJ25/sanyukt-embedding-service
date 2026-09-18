@@ -16,14 +16,22 @@ class EmbeddingEngine:
         self.model: Optional[SentenceTransformer] = None
         self.is_ready: bool = False
         self.model_name: str = settings.EMBEDDING_MODEL
+        self.model_revision: str = settings.EMBEDDING_MODEL_REVISION
         self.device: str = settings.get_device()
         self.dimensions: int = settings.EMBEDDING_DIMENSIONS
 
     def load(self) -> None:
         """Loads model once into memory and performs startup inference warmup."""
-        logger.info(f"Loading embedding model '{self.model_name}' on device '{self.device}'...")
+        logger.info(
+            f"Loading embedding model '{self.model_name}' (revision: '{self.model_revision}') "
+            f"on device '{self.device}'..."
+        )
         try:
-            self.model = SentenceTransformer(self.model_name, device=self.device)
+            self.model = SentenceTransformer(
+                self.model_name,
+                revision=self.model_revision,
+                device=self.device,
+            )
             # Perform a lightweight inference warmup check
             warmup_text = ["passage: system startup verification"]
             warmup_embedding = self.model.encode(
