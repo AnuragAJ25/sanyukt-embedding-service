@@ -1,17 +1,25 @@
 import os
 import sys
+import math
 import threading
 import time
 import httpx
 import uvicorn
 
-# Set environment variable before loading settings
+# Ensure repository root is on sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+# Set test token before importing application settings
 os.environ["EMBEDDING_API_TOKEN"] = "test-live-token-9876543210fedcba"
 
 from app.main import app
 
+def is_unit_normalized(vec: list, tolerance: float = 1e-3) -> bool:
+    norm = math.sqrt(sum(x * x for x in vec))
+    return abs(norm - 1.0) < tolerance
+
 def run_server():
-    uvicorn.run(app, host="127.0.0.1", port=8008, log_level="info")
+    uvicorn.run(app, host="127.0.0.1", port=8008, log_level="warning")
 
 server_thread = threading.Thread(target=run_server, daemon=True)
 server_thread.start()
@@ -63,7 +71,8 @@ with httpx.Client(base_url=base_url, timeout=30.0) as client:
     assert s_data["model"] == "intfloat/multilingual-e5-small"
     assert s_data["dimensions"] == 384
     assert len(s_data["embedding"]) == 384
-    print(f"[PASS] POST /v1/embeddings (Single query, dim: {len(s_data['embedding'])})")
+    assert is_unit_normalized(s_data["embedding"])
+    print(f"[PASS] POST /v1/embeddings (Single query, dim: {len(s_data['embedding'])}, normalized: True)")
 
     # 4. Batch Embedding passage
     passages = [
@@ -80,10 +89,10 @@ with httpx.Client(base_url=base_url, timeout=30.0) as client:
     b_data = b.json()
     assert b_data["count"] == 3
     assert len(b_data["embeddings"]) == 3
-    assert all(len(v) == 384 for v in b_data["embeddings"])
-    print(f"[PASS] POST /v1/embeddings/batch (Count: {b_data['count']}, Dims: 384)")
+    assert all(len(v) == 384 and is_unit_normalized(v) for v in b_data["embeddings"])
+    print(f"[PASS] POST /v1/embeddings/batch (Count: {b_data['count']}, Dims: 384, normalized: True)")
 
-    # 5. Multilingual verification
+    # 5. Multilingual verification across 4 query types
     multilingual = [
         ("tractor subsidy", "English"),
         ("kisan ko tractor ke liye help", "Hinglish"),
@@ -99,7 +108,8 @@ with httpx.Client(base_url=base_url, timeout=30.0) as client:
         assert res.status_code == 200
         emb = res.json()["embedding"]
         assert len(emb) == 384
-        print(f"[PASS] Multilingual [{lang}]: 384 dims generated")
+        assert is_unit_normalized(emb)
+        print(f"[PASS] Multilingual [{lang}]: text='{text}' -> 384 dims, normalized=True")
 
 print("\n=======================================================")
 print("ALL LIVE HTTP MICROSERVICE CHECKS PASSED SUCCESSFULLY!")

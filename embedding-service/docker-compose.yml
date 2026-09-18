@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: multilingual-e5-api:latest
-    container_name: multilingual-e5-api
+    image: sanyukt-embedding-service:latest
+    container_name: sanyukt-embedding-service
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -12,6 +12,7 @@ services:
       - EMBEDDING_API_TOKEN=${EMBEDDING_API_TOKEN}
       - EMBEDDING_MODEL=intfloat/multilingual-e5-small
       - MAX_BATCH_SIZE=64
+      - MAX_CONCURRENT_INFERENCE=1
       - PORT=8000
       - HOST=0.0.0.0
       - LOG_LEVEL=INFO
@@ -22,7 +23,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    resources:
-      limits:
-        memory: 2G
-        cpus: '2.0'
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+        reservations:
+          cpus: '1.0'
+          memory: 1024M

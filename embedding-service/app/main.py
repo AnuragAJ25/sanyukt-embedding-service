@@ -33,7 +33,14 @@ async def lifespan(app: FastAPI):
 
     try:
         engine.load()
-        logger.info("Model initialization complete. Microservice is ready to accept requests.")
+        if not settings.is_token_configured():
+            logger.warning(
+                "CRITICAL SECURITY NOTICE: EMBEDDING_API_TOKEN is missing or blank! "
+                "The service will fail readiness checks (/health -> 503 ready=false) "
+                "until a valid non-empty EMBEDDING_API_TOKEN is provided."
+            )
+        else:
+            logger.info("Model initialization complete. Microservice is ready to accept requests.")
     except Exception as exc:
         logger.critical(f"Fatal error during model initialization: {exc}")
         # Allow startup to complete so health check can accurately report unready status or exit cleanly
@@ -96,7 +103,6 @@ def custom_openapi():
         "BearerAuth": {
             "type": "http",
             "scheme": "bearer",
-            "bearerFormat": "JWT",
             "description": "Provide secret API token in 'Authorization: Bearer <EMBEDDING_API_TOKEN>' header.",
         }
     }

@@ -28,6 +28,12 @@ class Settings(BaseSettings):
         le=512,
         description="Maximum allowed texts in a single batch request",
     )
+    MAX_CONCURRENT_INFERENCE: int = Field(
+        default=1,
+        ge=1,
+        le=32,
+        description="Maximum concurrent inference operations allowed (CPU default: 1)",
+    )
     PORT: int = Field(
         default=8000,
         ge=1,
@@ -54,6 +60,10 @@ class Settings(BaseSettings):
         default=384,
         description="Expected embedding dimension for multilingual-e5-small",
     )
+
+    def is_token_configured(self) -> bool:
+        """Check whether a non-empty EMBEDDING_API_TOKEN is configured."""
+        return bool(self.EMBEDDING_API_TOKEN and self.EMBEDDING_API_TOKEN.strip())
 
     def get_device(self) -> str:
         """Resolve device to 'cuda' or 'cpu'."""

@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -15,6 +17,16 @@ from app.security import security_scheme, verify_api_token
 logger = logging.getLogger("embedding-service.embeddings")
 
 router = APIRouter(prefix="/v1/embeddings", tags=["Embeddings"])
+
+_inference_semaphore: Optional[asyncio.Semaphore] = None
+
+
+def get_inference_semaphore() -> asyncio.Semaphore:
+    """Bounded concurrency guard to prevent CPU thrashing or memory overflow."""
+    global _inference_semaphore
+    if _inference_semaphore is None:
+        _inference_semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_INFERENCE)
+    return _inference_semaphore
 
 
 @router.post(
@@ -61,7 +73,11 @@ async def create_single_embedding(
     verify_api_token(credentials)
 
     try:
-        embeddings = engine.embed_texts([request.text], request.input_type)
+        semaphore = get_inference_semaphore()
+        async with semaphore:
+            embeddings = await asyncio.to_thread(
+                engine.embed_texts, [request.text], request.input_type
+            )
         if not embeddings:
             raise RuntimeError("Engine returned no embeddings.")
         embedding = embeddings[0]
@@ -142,7 +158,11 @@ async def create_batch_embeddings(
         )
 
     try:
-        embeddings = engine.embed_texts(request.texts, request.input_type)
+        semaphore = get_inference_semaphore()
+        async with semaphore:
+            embeddings = await asyncio.to_thread(
+                engine.embed_texts, request.texts, request.input_type
+            )
     except Exception as exc:
         logger.error(f"Failed to generate batch embeddings: {exc}")
         raise HTTPException(

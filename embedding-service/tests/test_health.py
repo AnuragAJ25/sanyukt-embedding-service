@@ -1,9 +1,10 @@
 from starlette.testclient import TestClient
+from app.config import settings
 from app.model import engine
 
 
 def test_health_endpoint_public_and_healthy(client: TestClient):
-    """Verify GET /health is publicly accessible without auth and reports ready."""
+    """Verify GET /health is publicly accessible without auth and reports ready when token and model are valid."""
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
@@ -14,7 +15,7 @@ def test_health_endpoint_public_and_healthy(client: TestClient):
     assert "device" in data
 
 
-def test_health_endpoint_degraded_when_unready(client: TestClient):
+def test_health_endpoint_degraded_when_model_unready(client: TestClient):
     """Verify GET /health returns 503 if model is unready."""
     original_state = engine.is_ready
     try:
@@ -23,6 +24,30 @@ def test_health_endpoint_degraded_when_unready(client: TestClient):
         assert response.status_code == 503
         data = response.json()
         assert data["ready"] is False
-        assert data["status"] == "degraded"
+        assert "degraded" in data["status"]
     finally:
         engine.is_ready = original_state
+
+
+def test_health_endpoint_fails_closed_when_token_missing_or_blank(client: TestClient):
+    """
+    Verify GET /health returns 503 ready=false if EMBEDDING_API_TOKEN is missing or blank.
+    Never reports ready=true when protected endpoints cannot be used.
+    """
+    original_token = settings.EMBEDDING_API_TOKEN
+    try:
+        settings.EMBEDDING_API_TOKEN = ""
+        response = client.get("/health")
+        assert response.status_code == 503
+        data = response.json()
+        assert data["ready"] is False
+        assert "token_not_configured" in data["status"]
+
+        # Also test whitespace-only token
+        settings.EMBEDDING_API_TOKEN = "    "
+        response_ws = client.get("/health")
+        assert response_ws.status_code == 503
+        data_ws = response_ws.json()
+        assert data_ws["ready"] is False
+    finally:
+        settings.EMBEDDING_API_TOKEN = original_token
